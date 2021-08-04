@@ -86,10 +86,13 @@ namespace entry
 			Gamepad,
 			Key,
 			Mouse,
+			Touch,
 			Size,
 			Window,
 			Suspend,
 			DropFile,
+			WindowMinimized,
+			WindowRestored,
 		};
 
 		Event(Enum _type)
@@ -154,6 +157,19 @@ namespace entry
 		bool m_move;
 	};
 
+	struct TouchEvent : public Event
+	{
+		ENTRY_IMPLEMENT_EVENT(TouchEvent, Event::Touch);
+
+		int32_t m_mx;
+		int32_t m_my;
+		int32_t m_mz;
+		/*MouseButton::Enum m_button;*/
+		int32_t fingerId;
+		bool m_down;
+		bool m_move;
+	};
+
 	struct SizeEvent : public Event
 	{
 		ENTRY_IMPLEMENT_EVENT(SizeEvent, Event::Size);
@@ -181,6 +197,14 @@ namespace entry
 		ENTRY_IMPLEMENT_EVENT(DropFileEvent, Event::DropFile);
 
 		bx::FilePath m_filePath;
+	};
+
+	struct WindowMinimizedEvent : public Event {
+		ENTRY_IMPLEMENT_EVENT(WindowMinimizedEvent, Event::WindowMinimized);		
+	};
+
+	struct WindowRestoredEvent : public Event {
+		ENTRY_IMPLEMENT_EVENT(WindowRestoredEvent, Event::WindowRestored);	
 	};
 
 	const Event* poll();
@@ -267,6 +291,30 @@ namespace entry
 			m_queue.push(ev);
 		}
 
+		void postTouchEvent(WindowHandle _handle, int32_t _mx, int32_t _my, int32_t _mz, int32_t fingerId)
+		{
+			TouchEvent* ev = BX_NEW(getAllocator(), TouchEvent)(_handle);
+			ev->m_mx = _mx;
+			ev->m_my = _my;
+			ev->m_mz = _mz;
+			ev->fingerId = fingerId;
+			ev->m_down = false;
+			ev->m_move = true;
+			m_queue.push(ev);
+		}
+
+		void postTouchEvent(WindowHandle _handle, int32_t _mx, int32_t _my, int32_t _mz, int32_t fingerId, bool _down)
+		{
+			TouchEvent* ev = BX_NEW(getAllocator(), TouchEvent)(_handle);
+			ev->m_mx = _mx;
+			ev->m_my = _my;
+			ev->m_mz = _mz;
+			ev->fingerId = fingerId;
+			ev->m_down = _down;
+			ev->m_move = false;
+			m_queue.push(ev);
+		}
+
 		void postSizeEvent(WindowHandle _handle, uint32_t _width, uint32_t _height)
 		{
 			SizeEvent* ev = BX_NEW(getAllocator(), SizeEvent)(_handle);
@@ -293,6 +341,18 @@ namespace entry
 		{
 			DropFileEvent* ev = BX_NEW(getAllocator(), DropFileEvent)(_handle);
 			ev->m_filePath = _filePath;
+			m_queue.push(ev);
+		}
+
+		void postWindowMinimizedEvent(WindowHandle _handle) {
+			WindowMinimizedEvent* ev = BX_NEW(getAllocator(), WindowMinimizedEvent)(_handle);
+			ev->m_handle = _handle;
+			m_queue.push(ev);
+		}
+
+		void postWindowRestoredEvent(WindowHandle _handle) {
+			WindowRestoredEvent* ev = BX_NEW(getAllocator(), WindowRestoredEvent)(_handle);
+			ev->m_handle = _handle;
 			m_queue.push(ev);
 		}
 

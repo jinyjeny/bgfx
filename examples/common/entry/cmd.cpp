@@ -8,7 +8,7 @@
 #include <bx/hash.h>
 #include <bx/string.h>
 
-#include "dbg.h"
+//#include "dbg.h"
 #include "cmd.h"
 #include "entry_p.h"
 

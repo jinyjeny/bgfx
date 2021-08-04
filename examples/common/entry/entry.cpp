@@ -654,7 +654,7 @@ restart:
 
 	WindowState s_window[ENTRY_CONFIG_MAX_WINDOWS];
 
-	bool processEvents(uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse)
+	bool processEvents(AppI* app, uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse)
 	{
 		bool needReset = s_reset != _reset;
 
@@ -699,7 +699,7 @@ restart:
 					}
 					break;
 
-				case Event::Mouse:
+				/*case Event::Mouse:
 					{
 						const MouseEvent* mouse = static_cast<const MouseEvent*>(ev);
 						handle = mouse->m_handle;
@@ -722,14 +722,18 @@ restart:
 							}
 						}
 					}
-					break;
+					break;*/
 
 				case Event::Key:
 					{
 						const KeyEvent* key = static_cast<const KeyEvent*>(ev);
 						handle = key->m_handle;
 
-						inputSetKeyState(key->m_key, key->m_modifiers, key->m_down);
+						// NOTE: m_key가 95, 97인 이벤트가 어마어마하게 생기고 있다.
+						/*libplat_loginfo("Event.Key: (code:%d, %s)",
+							(int)key->m_key,
+							key->m_down ? "down" : "up");
+						inputSetKeyState(key->m_key, key->m_modifiers, key->m_down);*/
 					}
 					break;
 
@@ -763,6 +767,7 @@ restart:
 					break;
 
 				default:
+					if (app) app->handleEvent(ev);
 					break;
 				}
 			}
@@ -807,7 +812,7 @@ restart:
 			struct SE
 			{
 				SE(WindowHandle _handle)
-					: m_ev(poll(_handle) )
+					: m_ev(poll(_handle))
 				{
 				}
 
@@ -842,7 +847,7 @@ restart:
 					{
 						const CharEvent* chev = static_cast<const CharEvent*>(ev);
 						win.m_handle = chev->m_handle;
-						inputChar(chev->m_len, chev->m_char);
+						inputChar(chev->m_len, chev->m_char);						
 					}
 					break;
 
@@ -1002,5 +1007,5 @@ restart:
 
 extern "C" bool entry_process_events(uint32_t* _width, uint32_t* _height, uint32_t* _debug, uint32_t* _reset)
 {
-	return entry::processEvents(*_width, *_height, *_debug, *_reset, NULL);
+	return entry::processEvents(NULL, *_width, *_height, *_debug, *_reset, NULL);
 }

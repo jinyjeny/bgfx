@@ -37,6 +37,8 @@ extern "C" int _main_(int _argc, char** _argv);
 
 namespace entry
 {
+	struct Event;
+
 	struct WindowHandle  { uint16_t idx; };
 	inline bool isValid(WindowHandle _handle)  { return UINT16_MAX != _handle.idx; }
 
@@ -242,7 +244,8 @@ namespace entry
 		int32_t m_axis[entry::GamepadAxis::Count];
 	};
 
-	bool processEvents(uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse = NULL);
+	class AppI;
+	bool processEvents(AppI* app, uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse = NULL);
 
 	bx::FileReaderI* getFileReader();
 	bx::FileWriterI* getFileWriter();
@@ -304,6 +307,9 @@ namespace entry
 
 		///
 		const char* getUrl() const;
+
+		/// AppI class may want to handle some Events not handled in entry.cpp.
+		virtual void handleEvent(const Event*) { }
 
 		///
 		AppI* getNext();
